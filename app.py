@@ -23,6 +23,9 @@ def icon():
     logging.debug("icon:" + icon)
     return send_file(icon, mimetype='image/png')
 
+def dummy_callback(token):
+    print('callback>> \033[36m' + token + '\033[0m')
+
 @app.route('/chat')
 def chat():
     # preprocess
@@ -30,7 +33,7 @@ def chat():
     callback = request.args.get('callback')
     # query to openai
     chat_history = []
-    result = openai_qa(query, chat_history)
+    result = openai_qa(query, chat_history, dummy_callback)
     answer = result["answer"]
     # debug
     logging.debug("answer: " + answer)
@@ -52,7 +55,7 @@ def chat():
 # AirPlay uses port 5000 on Mac
 def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s:%(name)s - %(message)s")   
-    app.debug = True  
+    app.debug = True
     app.run(port='5001')
 
 if __name__ == '__main__':
