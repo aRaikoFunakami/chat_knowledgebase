@@ -1,3 +1,4 @@
+import flask
 from flask import Flask
 from flask import render_template
 from flask import send_file
@@ -6,10 +7,14 @@ from flask import request
 import os
 import json
 import logging
+import queue
 from gpt.openai_chat import openai_qa
 
 app = Flask(__name__)
 chat_history=[]
+
+# Ugh!: will fail if there are more than two clients accessing /listen
+qa_stream = queue.Queue()
 
 # loading chat client
 @app.route('/')
@@ -24,6 +29,7 @@ def icon():
     return send_file(icon, mimetype='image/png')
 
 def dummy_callback(token):
+    qa_stream.put(token)
     print('callback>> \033[36m' + token + '\033[0m')
 
 @app.route('/chat')
@@ -52,11 +58,23 @@ def chat():
     logging.debug(res)
     return res
 
+# Ugh!: No end is reached because None is never put into qa_stream.
+@app.route('/listen')
+def listen():
+    def stream():
+        while True:
+            msg = qa_stream.get()
+            if msg is None:
+                break 
+            yield f'data: {msg}\n\n'
+    response = flask.Response(stream(), mimetype='text/event-stream')
+    return response
+
 # AirPlay uses port 5000 on Mac
 def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s:%(name)s - %(message)s")   
     app.debug = True
-    app.run(port='5001')
+    app.run(port='5001', threaded=True)
 
 if __name__ == '__main__':
     main()

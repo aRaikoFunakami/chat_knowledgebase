@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>エコーボット</title>
+
+    <!-- made by ChatGPT -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        .cool-box {
+            width: 600px;
+            height: 800px;
+            background: linear-gradient(45deg, #49a09d, #5f2c82);
+            color: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0px 10px 20px rgba(0,0,0,0.19), 0px 6px 6px rgba(0,0,0,0.23);
+        }
+    </style>
+
 </head>
 <body>
 <script src="https://riversun.github.io/chatux/chatux.min.js"></script>
@@ -43,6 +58,25 @@
     chatux.init(initParam);
     chatux.start(true);
 
+</script>
+
+<div id="streaming_msg" class="cool-box">
+    <h1>Streaming message from GPT</h1>
+</div>
+<script>
+    const messagesDiv = document.getElementById("streaming_msg");
+
+    //  receiving ChatGPT streaming responses from /listen
+    const eventSource = new EventSource("/listen");
+    eventSource.onmessage = function (event) {
+        const data = event.data;
+        messagesDiv.innerHTML += data;
+    };
+    eventSource.onerror = function(event) {
+        console.error("Connection error:", event);
+        // no automatic re-connection
+        eventSource.close();
+    };
 </script>
 </body>
 </html>
